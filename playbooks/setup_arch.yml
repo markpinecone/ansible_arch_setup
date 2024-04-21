@@ -50,6 +50,7 @@
           - networkmanager-openvpn
           - go
           - python3
+          - thunar
         state: present
 
     - name: Build and install AUR pkgs
