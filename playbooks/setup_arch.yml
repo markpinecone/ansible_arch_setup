@@ -1,0 +1,86 @@
+- hosts: all
+  become: true
+  vars_prompt:
+    - name: ansible_ssh_user
+      prompt: "Enter your SSH username:"
+      private: no
+    - name: ansible_ssh_pass
+      prompt: "Enter your SSH password:"
+      private: yes
+    - name: ansible_become_pass
+      prompt: "Enter your sudo password:"
+      private: yes
+  tasks:
+    - name: Install packages
+      pacman:
+        name: 
+          - base-devel
+          - git
+          - curl
+          - qtile
+          - rofi
+          - nitrogen
+          - flameshot
+          - sddm
+          - kitty
+          - cargo
+          - pavucontrol
+          - python-pexpect
+          - python-dbus-next
+          - python-psutil
+          - picom
+          - dbus
+          - dbus-broker-units
+          - ttf-jetbrains-mono-nerd
+          - ttf-firacode-nerd
+          - xorg-xrandr
+          - lm_sensors
+          - dunst
+          - pipewire-pulse
+          - polkit-gnome
+          - firefox
+          - rtkit
+          - wireplumber
+          - alsa-utils
+          - alsa-card-profiles
+          - alsa-firmware
+          - alsa-lib
+          - pipewire-alsa
+          - networkmanager
+          - networkmanager-openvpn
+          - go
+          - python3
+        state: present
+
+    - name: Build and install AUR pkgs
+      become: false
+      ansible.builtin.expect:
+        command: 'yay -S --noconfirm qtile-extras python-pulsectl-asyncio python-pulsectl python-pulsectl-asyncio nm-applet'
+        responses:
+          password: "{{ ansible_become_pass }}"
+
+    - name: Clone Dotfiles repository
+      become: false
+      git:
+        repo: "https://github.com/markpinecone/dotfiiles.git"
+        dest: "~/repo/dotfiles"
+
+    - name: Copy Dotfiles from local repository
+      become: false
+      copy:
+        src: "~/repo/dotfiles/"
+        dest: "~/.config/"
+        remote_src: yes
+        force: yes
+    
+    - name: Enable and start D-Bus service
+      ansible.builtin.service:
+        name: dbus
+        state: started
+        enabled: true
+
+    - name: Enable and start NM service
+      ansible.builtin.service:
+        name: NetworkManager
+        state: started
+        enabled: true
